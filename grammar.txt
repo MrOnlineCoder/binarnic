@@ -1,0 +1,18 @@
+	
+	EBNF cheatsheet:
+	x , y == concat
+	x | y | z == logical OR, one of x, y or z
+	[x] == empty or x
+	{x} == zero or more of x's
+	(x z) - grouping of x and z
+
+
+program			::= {expression}
+
+expression		::= equality
+equality		::= implication {'<=>' equality}
+implication		::= disjunction {'=>' disjunction}
+disjunction		::= conjunction {|' conjunction}
+conjunction		::= factor {'&' factor}
+factor			::= '!' factor | '(' expression ')' | const 
+const			::= 0 | 1
