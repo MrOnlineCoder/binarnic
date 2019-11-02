@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 char* current_buffer = NULL;
 
@@ -17,6 +18,8 @@ size_t ntokens;
 size_t tok_iter;
 
 int lexer_error = 0;
+
+token_t EOF_TOKEN;
 
 static void lexer_push(token_t t) {
 	tokens[ntokens] = t;
@@ -29,6 +32,10 @@ void lexer_init(char* buf) {
 	ntokens = 0;
 	tok_iter = 0;
 	lexer_error = 0;
+
+	EOF_TOKEN.type = TOKEN_EOF;
+	EOF_TOKEN.value = 0;
+	EOF_TOKEN.str_value[0] = '\0';
 }
 
 void lexer_run() {
@@ -39,6 +46,8 @@ void lexer_run() {
 		cp++;
 
 		token_t tok;
+		tok.value = 0;
+		tok.str_value[0] = '\0';
 
 		if (c == ' ' || c == '\t') {
 			continue;
@@ -60,35 +69,30 @@ void lexer_run() {
 
 		if (c == '!') {
 			tok.type = TOKEN_OP_NOT;
-			tok.value = 0;
 			lexer_push(tok);
 			continue;
 		}
 
 		if (c == '&') {
 			tok.type = TOKEN_OP_AND;
-			tok.value = 0;
 			lexer_push(tok);
 			continue;
 		}
 
 		if (c == '|') {
 			tok.type = TOKEN_OP_OR;
-			tok.value = 0;
 			lexer_push(tok);
 			continue;
 		}
 
 		if (c == '(') {
 			tok.type = TOKEN_LPAREN;
-			tok.value = 0;
 			lexer_push(tok);
 			continue;
 		}
 
 		if (c == ')') {
 			tok.type = TOKEN_RPAREN;
-			tok.value = 0;
 			lexer_push(tok);
 			continue;
 		}		
@@ -96,10 +100,11 @@ void lexer_run() {
 		if (c == '=') {
 			c = *cp++;
 
-			tok.value = 0;
-
 			if (c == '>') {
 				tok.type = TOKEN_OP_IMP;
+			} else {
+				tok.type = TOKEN_ASSIGN;
+				cp--;
 			} 
 
 			lexer_push(tok);
@@ -111,13 +116,29 @@ void lexer_run() {
 			char c2 = *cp++;
 
 			if (c == '=' && c2 == '>') {
-				tok.value = 0;
 				tok.type = TOKEN_OP_EQ;
 			}
 
 			lexer_push(tok);
 			continue;
 		}
+
+		if (isalpha(c)) {
+			int idx = 1;
+			tok.str_value[0] = c;
+			while (*cp && isalpha(*cp)) {
+				tok.str_value[idx] = *cp;
+				cp++;
+				idx++;
+			}
+
+			tok.str_value[idx] = '\0';
+
+			tok.type = TOKEN_ID;
+			lexer_push(tok);
+			continue;
+		}
+
 
 		printf("lexer error: unknown token '%c'\n", c);
 		lexer_error = 1;
@@ -129,7 +150,7 @@ void lexer_dump() {
 	for (size_t i = 0; i < ntokens; i++) {
 		token_t tok = tokens[i];
 
-		printf("#%zu => type: %d, value: %d\n", i, tok.type, tok.value);
+		printf("#%zu => type: %d, value: %d, str_value = %s\n", i, tok.type, tok.value, tok.str_value);
 	}
 }
 
@@ -138,11 +159,20 @@ int lexer_has_next() {
 }
 
 token_t lexer_next() {
+	if (!lexer_has_next()) {
+		return EOF_TOKEN;
+	}
 	return tokens[tok_iter++];
 }
 
 token_t lexer_peek() {
+	if (tok_iter >= ntokens) return EOF_TOKEN;
 	return tokens[tok_iter];
+}
+
+token_t lexer_peek_far(int d) {
+	if (tok_iter+d >= ntokens) return EOF_TOKEN;
+	return tokens[tok_iter+d];
 }
 
 int lexer_has_error() {

@@ -7,12 +7,15 @@
 	(x z) - grouping of x and z
 
 
-program			::= {expression}
+program			::= {statement}
+
+statement		::= assign | expression
+assign			::= variable '=' expression
 
 expression		::= equality
 equality		::= implication {'<=>' equality}
 implication		::= disjunction {'=>' disjunction}
 disjunction		::= conjunction {|' conjunction}
 conjunction		::= factor {'&' factor}
-factor			::= '!' factor | '(' expression ')' | const 
+factor			::= '!' factor | '(' expression ')' | variable | const
 const			::= 0 | 1

@@ -21,6 +21,7 @@ void print_help() {
 	printf("'x | y' - logical OR\n");
 	printf("'x => y' - implication\n");
 	printf("'x <=> y' - equality\n");
+	printf("'a = <expression>' - set variable a\n");
 	printf("'(', ')' - change operations priority with parenthesis\n");
 }
 
@@ -42,13 +43,16 @@ void repl_loop() {
 
 			lexer_init(&input[0]);
 			lexer_run();
+			//lexer_dump();
 
 			if (!lexer_has_error()) {
 				parser_init();
 
 				value_t result = parser_run();
 
-				printf("%d\n", result);
+				if (!parser_has_error()) {
+					printf("%d\n", result);
+				}
 			}
 		}
 	}

@@ -15,10 +15,16 @@
 #define TOKEN_OP_EQ 5
 #define TOKEN_LPAREN 6
 #define TOKEN_RPAREN 7
+#define TOKEN_ID 8
+#define TOKEN_ASSIGN 9
+
+#define TOKEN_EOF 255
 
 typedef struct {
 	int type;
 	int value;
+
+	char str_value[64];
 } token_t;
 
 void lexer_init(char* buf);
@@ -27,6 +33,7 @@ void lexer_dump();
 int lexer_has_next();
 token_t lexer_next();
 token_t lexer_peek();
+token_t lexer_peek_far(int d);
 int lexer_has_error();
 
 #endif
