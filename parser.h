@@ -15,7 +15,9 @@ typedef struct {
 } var_t;
 
 void parser_init();
+void parser_prepare();
 value_t parser_run();
 int parser_has_error();
+void parser_cleanup();
 
 #endif

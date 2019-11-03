@@ -9,8 +9,9 @@
 
 program			::= {statement}
 
-statement		::= assign | expression
+statement		::= assign  | expression
 assign			::= variable '=' expression
+
 
 expression		::= equality
 equality		::= implication {'<=>' equality}

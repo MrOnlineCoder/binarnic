@@ -7,6 +7,7 @@
 #include "parser.h"
 #include "lexer.h"
 #include "operations.h"
+#include "map.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,13 +30,7 @@ void raise_error() {
 	VARIABLES
 
 */
-
-var_t vars[256];
-size_t nvars = 0;;
-
-value_t* get_variable(char* name);
-void put_variable(char* name, value_t val);
-
+map_t globals;
 
 /*
 	
@@ -72,19 +67,24 @@ value_t factor() {
 	}
 
 	if (tok.type == TOKEN_ID) {
-		value_t* t = get_variable(tok.str_value);
+		entry_t* var = map_get(&globals, tok.str_value);
 
-		if (!t) {
+		if (!var) {
 			raise_error();
 			printf("parser error: unknown identifier '%s'\n", tok.str_value);
 			return 0;
 		}
 
-		return *t;
+		return var->value;
 	}
 
 	raise_error();
-	printf("parser error: unexpected token '%d'\n", tok.type);
+	if (tok.type == TOKEN_EOF) {
+		printf("parser error: unexpected end of input\n");
+	} else {
+		printf("parser error: unexpected token '%d'\n", tok.type);
+	}
+	
 	return 0;
 }
 
@@ -152,7 +152,7 @@ value_t assign() {
 
 	value_t right = expression();
 
-	put_variable(left.str_value, right);
+	map_put(&globals, left.str_value, right);
 
 	return right;
 }
@@ -165,37 +165,22 @@ value_t statement() {
 	}
 }
 
-value_t* get_variable(char* name) {
-	for (size_t i = 0; i < nvars; i++) {
-		if (strcmp(name, vars[i].name) == 0) {
-			return &vars[i].value;
-		}
-	}
-
-	return NULL;
-}
-
-void put_variable(char* name, value_t val) {
-	for (size_t i = 0; i < nvars; i++) {
-		if (strcmp(name, vars[i].name) == 0) {
-			vars[i].value = val;
-			return;
-		}
-	}
-
-	strcpy(vars[nvars].name, name);
-	vars[nvars].value = val;
-	nvars++;
-}
-
 /*
 
 	PUBLIC FUNCTIONS
 
 */
 
-void parser_init() {
+void parser_prepare() {
 	parser_error = 0;
+}
+
+void parser_init() {
+	map_init(&globals);
+}
+
+void parser_cleanup() {
+	map_free(&globals);
 }
 
 value_t parser_run() {

@@ -30,6 +30,8 @@ void repl_loop() {
 
 	printf("Type 'exit' to exit or 'help' to get short reference\n\n");
 
+	parser_init();
+
 	for(;;) {
 		printf(">> ");
 		if (fgets(input, sizeof(input), stdin)) {
@@ -46,7 +48,7 @@ void repl_loop() {
 			//lexer_dump();
 
 			if (!lexer_has_error()) {
-				parser_init();
+				parser_prepare();
 
 				value_t result = parser_run();
 
